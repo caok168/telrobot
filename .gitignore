@@ -1,0 +1,4 @@
+.idea
+telrobot
+deploy/compose/mysql
+deploy/compose/postgresql

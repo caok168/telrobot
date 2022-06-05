@@ -1,0 +1,52 @@
+version: "3"
+services:
+  telrobot:
+    build: ../..
+    container_name: telrobot
+#    ports:
+#      - "4000:4000"
+    restart: always
+    network_mode: "host"
+    logging:
+      options:
+        max-size: "1g"
+        max-file: "2"
+#    depends_on:
+#      - postgres
+    environment:
+      - GIN_MODE=release
+      - OC_DB_URL=host=postgres port=5432 user=robot password=robot dbname=robot sslmode=disable
+  debug-proxy:
+    image: alpine/socat
+    depends_on:
+      - postgres
+    ports:
+      - "5433:5432"
+    entrypoint: /bin/sh
+      - ./debug-proxy.sh:/debug-proxy.sh
+    command: /debug-proxy.sh
+
+  postgres:
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=robot
+      - POSTGRES_USER=robot
+      - POSTGRES_PASSWORD=robot
+    volumes:
+      - ./postgresql:/var/lib/postgresql
+
+  mysql:
+    container_name: telrobot-mysql
+    restart: always
+    image: mysql:5.7
+    ports:
+      - 3307:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=robot
+#    env_file:
+#      - mysql.env
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/data:/var/lib/mysql
