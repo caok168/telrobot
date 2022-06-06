@@ -11,6 +11,7 @@ DATE_TIME			:= $(shell date '+%Y-%m-%dT%H:%M:%S')
 COMMIT_COUNT		:= $(shell git rev-list --all --count)
 DOCKER_PROJECT		:= telrobot
 DOCKER_VERSION		:= $(GITTAG_NO_V).$(GITCOMMITHASH)
+DOCKER_VERSION		:= "v1.0"
 VERSIONTAG			:= -ldflags "-X main.BuildTime=$(DATE_TIME) -X main.BuildGitHash=$(GITCOMMITHASH) -X main.BuildGitTag=$(GITTAG) -X main.BuildGitCount=$(COMMIT_COUNT)"
 PACKAGES			:= `go list ./... | grep -v /vendor/`
 VETPACKAGES			:= `go list ./... | grep -v /vendor/ | grep -v /examples/`
