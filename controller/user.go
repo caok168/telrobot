@@ -8,18 +8,20 @@ import (
 	"net/http"
 	"strconv"
 	"telrobot/models"
+	"telrobot/partner"
 	"telrobot/pkg/e"
 	"telrobot/repositories"
 	"telrobot/util/common"
 )
 
 type UserController struct {
-	Users *repositories.UserRepository
+	Users  *repositories.UserRepository
+	Client *partner.Client
 }
 
 func NewUserController(r *repositories.UserRepository) *UserController {
-
-	return &UserController{Users: r}
+	client := partner.NewClient()
+	return &UserController{Users: r, Client: client}
 }
 
 func (uc *UserController) Create(c *gin.Context) {
@@ -39,6 +41,15 @@ func (uc *UserController) Create(c *gin.Context) {
 		Password:             body.Password,
 		PasswordConfirmation: body.PasswordConfirmation,
 	}
+
+	uuid, err := uc.Client.Create(model)
+	if err != nil {
+		code := http.StatusInternalServerError
+		c.JSON(code, e.ErrorText(code, err.Error()))
+		return
+	}
+
+	model.Uuid = uuid
 
 	res, err := uc.Users.Create(&model)
 	if err != nil {

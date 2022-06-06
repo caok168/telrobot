@@ -113,6 +113,16 @@ func (r *UserRepository) UpdateByID(idStr string, data interface{}) (int64, erro
 	return query.RowsAffected, nil
 }
 
+func (r *UserRepository) UpdateByUuid(uuid string, data interface{}) (int64, error) {
+
+	query := r.db.Model(&models.User{Uuid: uuid}).Updates(data)
+	if err := query.Error; err != nil {
+		return 0, err
+	}
+
+	return query.RowsAffected, nil
+}
+
 // Create a job with data
 func (r *UserRepository) Create(data *models.User) (*models.User, error) {
 	if err := r.db.Create(data).Error; err != nil {
@@ -126,6 +136,16 @@ func (r *UserRepository) Create(data *models.User) (*models.User, error) {
 // RemoveByID remove a user by id
 func (r *UserRepository) RemoveByID(id string) (int64, error) {
 	query := r.db.Delete(models.User{}, "id = ?", id)
+	if err := query.Error; err != nil {
+		return 0, err
+	}
+
+	return query.RowsAffected, nil
+}
+
+// RemoveByID remove a user by uuid
+func (r *UserRepository) RemoveByUuid(uuid string) (int64, error) {
+	query := r.db.Delete(models.User{}, "uuid = ?", uuid)
 	if err := query.Error; err != nil {
 		return 0, err
 	}
