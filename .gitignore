@@ -2,3 +2,4 @@
 telrobot
 deploy/compose/mysql
 deploy/compose/postgresql
+deploy/robot.tar

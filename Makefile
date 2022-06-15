@@ -49,6 +49,15 @@ docker:
 #	docker tag $(DOCKER_PROJECT):$(DOCKER_VERSION) $(DOCKER_HUB_REGISTRY)/$(DOCKER_HUB_REGISTRY_GROUP)/$(DOCKER_PROJECT):$(DOCKER_VERSION)
 #	docker tag $(DOCKER_PROJECT):$(DOCKER_VERSION) $(DOCKER_HUB)/$(DOCKER_GROUP)/$(DOCKER_PROJECT):$(DOCKER_VERSION)
 
+docker-save:
+	docker save -o ./deploy/robot.tar $(DOCKER_PROJECT):$(DOCKER_VERSION)
+
+docker-scp:
+	scp ./deploy/robot.tar root@43.138.175.33:/root/app
+
+docker-upload:
+	sshpass -p Robot@123 scp ./deploy/robot.tar root@43.138.175.33:/root/app
+
 quick-docker:go-mod-vendor
 	docker build  -t $(DOCKER_PROJECT):$(DOCKER_VERSION) -f Dockerfile-quick .
 	docker tag $(DOCKER_PROJECT):$(DOCKER_VERSION) $(DOCKER_HUB)/$(DOCKER_GROUP)/$(DOCKER_PROJECT):$(DOCKER_VERSION)

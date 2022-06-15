@@ -51,7 +51,7 @@ func (r *UserRepository) ListBySql(name, email string, limit, offset int) ([]*mo
 	var total int
 	var err error
 
-	sql := "select uuid,name, email, phone, password from users where deleted_at is null "
+	sql := "select id, uuid,name, email, phone, password from users where deleted_at is null "
 	if name != "" {
 		sql += " and name like '%" + name + "%'"
 	}
