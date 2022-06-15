@@ -8,6 +8,11 @@ type UserInfo struct {
 	Phone []string `json:"phone"`
 }
 
+type BasicResp struct {
+	Code   int    `json:"code"`
+	Status string `json:"status"`
+}
+
 type GetUserResp struct {
 	Code    int    `json:"code"`
 	Status  string `json:"status"`

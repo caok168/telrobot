@@ -93,9 +93,9 @@ func (svc *RobotService) SetUserHandlers(r *gin.Engine) {
 		{
 			api.POST("/users", u.Create)
 			api.GET("/users", u.List)
-			api.GET("/users/:id", u.Get)
-			api.PUT("/users/:id", u.Update)
-			api.DELETE("/users/:id", u.Remove)
+			api.GET("/users/:uuid", u.Get)
+			api.PUT("/users/:uuid", u.Update)
+			api.DELETE("/users/:uuid", u.Remove)
 		}
 	}
 }

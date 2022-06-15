@@ -98,6 +98,15 @@ func (r *UserRepository) GetByID(id string) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *UserRepository) GetByUuid(uuid string) (*models.User, error) {
+	var user models.User
+	if err := r.db.Where("uuid = ?", uuid).First(&user).Error; err != nil {
+		return nil, util.CheckNotFoundError(err)
+	}
+
+	return &user, nil
+}
+
 // Update a user by id with data
 func (r *UserRepository) UpdateByID(idStr string, data interface{}) (int64, error) {
 	id, err := strconv.Atoi(idStr)
@@ -115,7 +124,7 @@ func (r *UserRepository) UpdateByID(idStr string, data interface{}) (int64, erro
 
 func (r *UserRepository) UpdateByUuid(uuid string, data interface{}) (int64, error) {
 
-	query := r.db.Model(&models.User{Uuid: uuid}).Updates(data)
+	query := r.db.Model(&models.User{Uuid: uuid}).Where("uuid = ?", uuid).Updates(data)
 	if err := query.Error; err != nil {
 		return 0, err
 	}

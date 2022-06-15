@@ -2,7 +2,9 @@ package partner
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strconv"
 	"telrobot/models"
 	app "telrobot/util/common"
 	"telrobot/util/http"
@@ -20,11 +22,17 @@ func NewClient() *Client {
 	return &Client{Url: url, Token: token}
 }
 
-func (c *Client) GetList() {
+func (c *Client) GetList() (*models.ListUserResp, error) {
 	url := c.Url + "/users"
 	data, err := http.Get(url, "ContentType: application/json", token)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return nil, err
+	}
+
+	err = c.checkResp(url, data)
+	if err != nil {
+		return nil, err
 	}
 
 	resp := models.ListUserResp{}
@@ -32,18 +40,26 @@ func (c *Client) GetList() {
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return nil, err
 	}
 
 	fmt.Println(resp)
+
+	return &resp, nil
 }
 
-func (c *Client) Get(id string) models.GetUserResp {
+func (c *Client) Get(id string) (*models.GetUserResp, error) {
 	//id := "83e64bbe-01c1-437d-b67f-6184419d1db2"
 	url := c.Url + "/users/" + id + "/edit"
 
 	data, err := http.Get(url, "ContentType: application/json", token)
 	if err != nil {
-		fmt.Printf("error:%s", err.Error())
+		fmt.Printf("error:%s, id=", err.Error(), id)
+	}
+
+	err = c.checkResp(url, data)
+	if err != nil {
+		return nil, err
 	}
 
 	resp := models.GetUserResp{}
@@ -51,11 +67,12 @@ func (c *Client) Get(id string) models.GetUserResp {
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return nil, err
 	}
 
 	fmt.Println(resp)
 
-	return resp
+	return &resp, nil
 }
 
 func (c *Client) Create(model models.User) (string, error) {
@@ -74,44 +91,58 @@ func (c *Client) Create(model models.User) (string, error) {
 
 	url := c.Url + "/users"
 
-	res, err := http.PostWithJson(url, bodybyte, token)
+	data, err := http.PostWithJson(url, bodybyte, token)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return "", err
+	}
+
+	err = c.checkResp(url, data)
+	if err != nil {
+		return "", err
 	}
 
 	resp := models.CreateUserResp{}
 
-	err = json.Unmarshal(res, &resp)
+	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return "", err
 	}
 
-	fmt.Println(string(res))
+	fmt.Println(string(data))
 	fmt.Println(resp)
 
 	return resp.Data.Id, nil
 }
 
-func (c *Client) Update(id string, model models.User) error {
+func (c *Client) Update(id string, body interface{}) error {
 	//id := "83e64bbe-01c1-437d-b67f-6184419d1db2"
 	url := c.Url + "/users/" + id
 
-	body := map[string]string{
-	}
-	body["name"] = model.Name
-	body["email"] = model.Email
-	body["phone"] = model.Phone
-	body["password"] = model.Password
-	body["password_confirmation"] = model.PasswordConfirmation
+	//body := map[string]string{
+	//}
+	//body["name"] = model.Name
+	//body["email"] = model.Email
+	//body["phone"] = model.Phone
+	//body["password"] = model.Password
+	//body["password_confirmation"] = model.PasswordConfirmation
 
 	bodybyte, err := json.Marshal(body)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return err
 	}
 
 	data, err := http.Put(url, bodybyte, "ContentType: application/json", token)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return err
+	}
+
+	err = c.checkResp(url, data)
+	if err != nil {
+		return err
 	}
 
 	resp := models.UpdateUserResp{}
@@ -119,6 +150,7 @@ func (c *Client) Update(id string, model models.User) error {
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return err
 	}
 
 	fmt.Println(resp)
@@ -133,6 +165,12 @@ func (c *Client) Remove(id string) error {
 	data, err := http.Delete(url, nil, "ContentType: application/json", token)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return err
+	}
+
+	err = c.checkResp(url, data)
+	if err != nil {
+		return err
 	}
 
 	resp := models.DeleteUserResp{}
@@ -140,9 +178,25 @@ func (c *Client) Remove(id string) error {
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		fmt.Printf("error:%s", err.Error())
+		return err
 	}
 
 	fmt.Println(resp)
+
+	return nil
+}
+
+func (c *Client) checkResp(url string, data []byte) error {
+	basicResp := models.BasicResp{}
+	err := json.Unmarshal(data, &basicResp)
+	if err != nil {
+		fmt.Printf("error:%s", err.Error())
+		return err
+	}
+
+	if basicResp.Code != 200 {
+		return errors.New("api return code:" + strconv.Itoa(basicResp.Code))
+	}
 
 	return nil
 }

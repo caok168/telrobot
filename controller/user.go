@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/segmentio/ksuid"
+	//"github.com/segmentio/ksuid"
 	"net/http"
-	"strconv"
 	"telrobot/models"
 	"telrobot/partner"
 	"telrobot/pkg/e"
@@ -85,19 +83,11 @@ func (uc *UserController) List(c *gin.Context) {
 }
 
 func (uc *UserController) Get(c *gin.Context) {
-	id := c.Param("id")
+	uuid := c.Param("uuid")
+	//uuid := fmt.Sprintf("%s", ksuid.New().String())
+	//fmt.Println("uuid:", uuid)
 
-	_, err := strconv.Atoi(id)
-	if err != nil {
-		code := http.StatusBadRequest
-		c.JSON(code, e.ErrorText(code, errors.New("id 参数不正确").Error()))
-		return
-	}
-
-	uuid := fmt.Sprintf("%s", ksuid.New().String())
-	fmt.Println("uuid:", uuid)
-
-	doc, err := uc.Users.GetByID(id)
+	doc, err := uc.Users.GetByUuid(uuid)
 	if err != nil {
 		code := http.StatusInternalServerError
 		c.JSON(code, e.ErrorText(code, err.Error()))
@@ -105,6 +95,13 @@ func (uc *UserController) Get(c *gin.Context) {
 	} else if doc == nil || doc.ID == 0 {
 		code := http.StatusNotFound
 		c.JSON(code, e.Error(code))
+		return
+	}
+
+	_, err = uc.Client.Get(doc.Uuid)
+	if err != nil {
+		code := http.StatusInternalServerError
+		c.JSON(code, e.ErrorText(code, err.Error()))
 		return
 	}
 
@@ -120,15 +117,7 @@ func (uc *UserController) Update(c *gin.Context) {
 		return
 	}
 
-
-	id := c.Param("id")
-	//id := strconv.Itoa(body.Id)
-
-	//Name                 string `json:"name"`
-	//Email                string `json:"email"`
-	//Phone                string `json:"phone"`
-	//Password             string `json:"password"`
-	//PasswordConfirmation string `json:"password_confirmation"`
+	uuid := c.Param("uuid")
 
 	user := map[string]interface{}{
 		"Name": body.Name,
@@ -138,7 +127,7 @@ func (uc *UserController) Update(c *gin.Context) {
 		"PasswordConfirmation": body.PasswordConfirmation,
 	}
 
-	affected, err := uc.Users.UpdateByID(id,user)
+	affected, err := uc.Users.UpdateByUuid(uuid,user)
 	if err != nil {
 		code := http.StatusInternalServerError
 		c.JSON(code, e.ErrorText(code, err.Error()))
@@ -149,11 +138,19 @@ func (uc *UserController) Update(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, "")
+	err = uc.Client.Update(uuid, user)
+	if err != nil {
+		code := http.StatusInternalServerError
+		c.JSON(code, e.ErrorText(code, err.Error()))
+		return
+	}
+
+	//c.String(http.StatusOK, "")
+	c.JSON(http.StatusOK, e.Result(""))
 }
 
 func (uc *UserController) Remove(c *gin.Context) {
-	id := c.Param("id")
+	uuid := c.Param("uuid")
 
 	//_, err := strconv.Atoi(id)
 	//if err != nil {
@@ -162,7 +159,7 @@ func (uc *UserController) Remove(c *gin.Context) {
 	//	return
 	//}
 
-	doc, err := uc.Users.GetByID(id)
+	doc, err := uc.Users.GetByUuid(uuid)
 	if err != nil {
 		code := http.StatusInternalServerError
 		c.JSON(code, e.ErrorText(code, err.Error()))
@@ -173,7 +170,7 @@ func (uc *UserController) Remove(c *gin.Context) {
 		return
 	}
 
-	affected, err := uc.Users.RemoveByID(id)
+	affected, err := uc.Users.RemoveByUuid(uuid)
 	if err != nil {
 		code := http.StatusInternalServerError
 		c.JSON(code, e.ErrorText(code, err.Error()))
@@ -184,5 +181,13 @@ func (uc *UserController) Remove(c *gin.Context) {
 		return
 	}
 
-	c.String(http.StatusOK, "")
+	err = uc.Client.Remove(uuid)
+	if err != nil {
+		code := http.StatusInternalServerError
+		c.JSON(code, e.ErrorText(code, err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, e.Result(""))
+	//c.String(http.StatusOK, "")
 }
